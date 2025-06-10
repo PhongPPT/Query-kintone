@@ -1,0 +1,163 @@
+.kintoneplugin-input-text {
+  align-items: center;
+}
+
+.container {
+  width: 100%;
+  min-width: 100%;
+}
+
+table td:first-child {
+  border-bottom-style: hidden;
+  border-top-style: hidden;
+  border-left-style: hidden;
+}
+
+.hidden {
+  display: none;
+}
+
+
+#button-action {
+  display: flex;
+  margin-left: 5%;
+  margin-top: 35px;
+  gap: 1%;
+}
+
+
+
+tbody tr {
+  align-items: center;
+}
+
+#kintoneplugin-table-th-table {
+  height: 0.5px;
+  background-color: #3333;
+  display: none;
+}
+
+#label-show-title {
+  margin-top: 10px;
+  margin-left: 53px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+#td-table-space-prompt-template-button {
+  border: 1px solid #3333;
+  margin-left: 50px;
+}
+
+#table-space-prompt-template-button {
+  margin-left: 35px;
+}
+
+.button-add-remove-row-promptSetting {
+  display: flex;
+}
+
+.button-add-remove-row-table-spaceForPrompt {
+  display: flex;
+  margin-top: 2.6rem;
+}
+
+.validation-error {
+  border-color: red;
+}
+
+.swal2-content {
+  max-height: 300px;
+  /* Adjust this value based on the desired maximum height */
+  overflow-y: auto;
+  width: auto;
+
+}
+
+.swal2-header {
+  width: auto;
+}
+
+.row {
+  display: flex;
+  margin: 8px;
+}
+
+.row>div {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+#kintoneplugin-setting-space {
+  width: 75%;
+  /* max-width: 850px; */
+  margin: 0 !important;
+}
+
+.operation-column {
+  border: none !important;
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+#appID {
+  width: 70px;
+}
+
+.kintoneplugin-table td {
+
+  border-width: 1px;
+}
+
+#kintoneplugin-setting-space th:first-child {
+  width: 5%;
+}
+
+#kintoneplugin-setting-space #td-table-space-prompt-template-button {
+  width: 70%;
+}
+
+#kintoneplugin-setting-space .kintoneplugin-table-td-operation.operation-column {
+  width: 100% !important;
+}
+
+.drag-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100% !important;
+  padding: 20px;
+}
+
+.drag-icon i {
+  font-size: 20px;
+  cursor: grab;
+}
+
+.ui-state-highlight {
+  height: 2.5em;
+  background-color: #f0f0f0;
+  border: 1px dashed #ccc;
+}
+
+
+.swal2-content p {
+  margin: 0 !important;
+}
+
+.custom-confirm-button {
+  color: #f7f9fa !important;
+}
+
+.custom-cancel-button {
+  color: #3498db !important;
+}
+
+.addRow-main {
+  margin-top: 6px;
+}
+
+.removeRow-main {
+  margin-top: 6px;
+}
