@@ -3,18 +3,20 @@
     let CONFIG = kintone.plugin.app.getConfig(PLUGIN_ID);
     if (!CONFIG) return;
     let CONFIG_JSON = JSON.parse(CONFIG.config || "{}");
-    console.log("CONFIG", CONFIG_JSON);
     let BUTTONNAME = CONFIG_JSON.table
       .filter((item) => item.buttonName && item.buttonName.trim() !== "")
       .map((item) => item.buttonName);
-    console.log("BUTTONNAME", BUTTONNAME);
     let records = events.records;
-    console.log("records", records);
+    console.log("records", records)
     const spaceEl = kintone.app.getHeaderSpaceElement();
-    if (spaceEl === null) {
+    if (!spaceEl)
       throw new Error("The header element is unavailable on this page.");
+
+    if ($(spaceEl).find(".custom-space-el").length > 0) {
+      return;
     }
-    const div = $("<div>").css({
+
+    const div = $("<div>").addClass("custom-space-el").css({
       margin: "10px 0",
       display: "flex",
       alignItems: "center",
@@ -30,9 +32,7 @@
     }
 
     $.each(CONFIG_JSON.table || [], function (index, item) {
-      console.log("item", item);
       let labelName = item?.InputName;
-      // console.log("item?.buttonName", item?.buttonName)
       const wrapper = $("<div>").css({ margin: "10px 0" });
       const label = $("<label>")
         .attr("for", `dynamic-input-${index}`)
@@ -41,7 +41,6 @@
       wrapper.append(label);
       let input;
 
-      // Create different input types based on fieldA
       switch (item.fieldA) {
         case "Date":
           input = $('<input type="date">');
@@ -67,14 +66,6 @@
         default:
           input = $('<input type="text">');
       }
-      // wrapper.append(input);
-      // if (item.fieldA !== "Dropdown") {
-      //   input
-      //     .attr("id", `dynamic-input-${index}`)
-      //     .attr("name", `dynamic-input-${index}`)
-      //     .css({ padding: "5px", marginLeft: "5px" })
-      //     .addClass("kintoneplugin-input-text");
-      // }
 
       if (item.fieldA !== "Drop_down") {
         input
@@ -128,16 +119,18 @@
           console.log(fieldCode);
           switch (item.fieldA) {
             case "Text":
-              queryParts.push(`${fieldCode} like "${value}"`);
+              queryParts.push(`(${fieldCode} like "${value}")`);
               break;
             case "Drop_down":
-              queryParts.push(`${fieldCode} in ("${value}")`);
+              queryParts.push(`(${fieldCode} in ("${value}"))`);
               break;
-            case "number":
-              queryParts.push(`${fieldCode} = ${value}`);
+            case "Number":
+              queryParts.push(`(${fieldCode} = ${value})`);
               break;
             case "Date":
-              queryParts.push(`${fieldCode} = "${value}"`);
+              queryParts.push(
+                `(${fieldCode} >= "${value}") and (${fieldCode} <= "${value}")`
+              );
               break;
             default:
               console.warn(`Unhandled field type: ${item.fieldA}`);
@@ -146,8 +139,10 @@
         }
       });
 
+      console.log("queryParts", queryParts);
       // Combine with AND
       const query = queryParts.join(" and ");
+
       console.log("query", query);
 
       if (!query) {
@@ -156,7 +151,7 @@
       }
       const baseUrl = window.location.href.match(/\S+\//)[0];
       const encodedQuery = encodeURIComponent(query);
-      const url = baseUrl + "?query=" + encodedQuery + "";
+      const url = baseUrl + "?query=" + encodedQuery;
 
       window.location.href = url;
     });
