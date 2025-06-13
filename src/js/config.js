@@ -387,7 +387,7 @@ jQuery.noConflict();
   });
 
   // function check structure and data import
-  async function compareConfigStructures(dataImport) {
+  async function compareConfigStructures(dataImport) { 
     let errorTexts = [];
     let configStructure = {
       table: [
