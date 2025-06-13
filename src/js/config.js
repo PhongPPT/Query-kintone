@@ -161,6 +161,15 @@ jQuery.noConflict();
     "RADIO_BUTTON",
     "SINGLE_LINE_TEXT",
     "NUMBER",
+    "CHECK_BOX",
+    "RICH_TEXT",
+    "MULTI_SELECT",
+    "TIME",
+    "DATETIME",
+    "NUMBER",
+    "NUMBER",
+    "NUMBER",
+    "NUMBER",
   ];
 
   let select = $(".type-select-field-A");
