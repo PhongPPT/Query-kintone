@@ -219,6 +219,15 @@ jQuery.noConflict();
 
   //setConfig
   async function setConfig(CONFIG_JSON) {
+    CONFIG_JSON = CONFIG_JSON || { table: [] };
+
+    if (!Array.isArray(CONFIG_JSON.table)) {
+      console.error(
+        "Invalid configuration data. 'table' is missing or not an array.",
+        CONFIG_JSON
+      );
+      return;
+    }
     // Get the main table space
     const tspace = document.getElementById("kintoneplugin-setting-tspace");
 
@@ -261,7 +270,7 @@ jQuery.noConflict();
       // Convert to jQuery object to apply additional styling
       const subClonedRow = $(subRow);
 
-      if (index != 0) {
+      if (index !== 0) {
         // Hide label.buttonName
         subClonedRow.find("label.buttonName").hide();
 
@@ -332,6 +341,201 @@ jQuery.noConflict();
 
   $("#cancel").on("click", function () {
     window.location.href = `../../flow?app=${kintone.app.getId()}#section=settings`;
+  });
+
+  //Export Function
+  $("#export").on("click", async function () {
+    Swal10.fire({
+      customClass: {
+        confirmButton: "custom-confirm-button",
+        cancelButton: "custom-cancel-button",
+      },
+      position: "center",
+      icon: "info",
+      text: "Do you want to export configuration information?",
+      confirmButtonColor: "#3498db",
+      showCancelButton: true,
+      cancelButtonColor: "#f7f9fa",
+      confirmButtonText: "Yes",
+      cancelButtonText: "Cancel",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        let hasError = await getPluginConfig();
+        console.log("hasError", hasError);
+        if (!hasError) return;
+        let data = await getPluginConfig();
+        console.log("Get data ", data);
+        let blob = new Blob([JSON.stringify(data)], {
+          type: "application/json",
+        });
+        let url = URL.createObjectURL(blob);
+        let date = new Date();
+        let year = date.getFullYear();
+        let month = ("0" + (date.getMonth() + 1)).slice(-2);
+        let day = ("0" + date.getDate()).slice(-2);
+        let hours = ("0" + date.getHours()).slice(-2);
+        let minutes = ("0" + date.getMinutes()).slice(-2);
+        let formattedDateTime = `${year}-${month}-${day} ${hours}-${minutes}.json`;
+        let elementDownload = $("<a>")
+          .attr("href", url)
+          .attr("download", formattedDateTime)
+          .appendTo("body");
+        elementDownload[0].click();
+        elementDownload.remove();
+      }
+    });
+  });
+
+  // function check structure and data import
+  async function compareConfigStructures(dataImport) {
+    let errorTexts = [];
+    let configStructure = {
+      table: [
+        {
+          buttonName: "string",
+          InputName: "string",
+          fieldA: "string",
+          condition: "string",
+        },
+      ],
+    };
+
+    function checkType(structure, data) {
+      console.log("data911-Test", data);
+      console.log("structure", structure);
+      if (Array.isArray(structure)) {
+        if (!Array.isArray(data)) {
+          errorTexts.push("Expected an array but got something else.");
+          return false;
+        }
+        for (let item of data) {
+          if (!checkType(structure[0], item)) {
+            errorTexts.push("Array element structure mismatch.");
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // if (typeof structure === "object" && structure !== null) {
+      //   if (typeof data !== "object" || data === null || Array.isArray(data)) {
+      //     errorTexts.push("Expected an object.");
+      //     return false;
+      //   }
+      //   for (let key in structure) {
+      //     if (!(key in data)) {
+      //       errorTexts.push(`Missing key: ${key}`);
+      //       return false;
+      //     }
+      //     if (!checkType(structure[key], data[key])) {
+      //       return false;
+      //     }
+      //   }
+      //   for (let key in data) {
+      //     if (!(key in structure)) {
+      //       errorTexts.push(`Unexpected key: ${key}`);
+      //       return false;
+      //     }
+      //   }
+      //   return true;
+      // }
+
+      // if (typeof structure === "string") {
+      //   if (typeof data !== structure) {
+      //     errorTexts.push(
+      //       `Type mismatch. Expected ${structure}, got ${typeof data}`
+      //     );
+      //     return false;
+      //   }
+      // }
+      return true;
+    }
+
+    function checkAllCases(dataImport) {
+      if (Object.keys(dataImport).length === 0) {
+        errorTexts.push("Configuration object is empty.");
+        return false;
+      }
+      return checkType(configStructure, dataImport);
+    }
+
+    let isValid = checkAllCases(dataImport);
+    if (!isValid) {
+      let customClass = $("<div></div>")
+        .text("Failed to load configuration information.")
+        .css("font-size", "18px");
+
+      let errors = errorTexts.join("<br>");
+      let customClassText = $("<div></div>")
+        .html(errors)
+        .css("font-size", "14px");
+
+      await Swal10.fire({
+        icon: "error",
+        title: customClass.prop("outerHTML"),
+        html: customClassText.prop("outerHTML"),
+        confirmButtonColor: "#3498db",
+      });
+      return false;
+    }
+
+    return true;
+  }
+
+  // Import Function
+  $("#import").on("click", function () {
+    $("#fileInput").click();
+  });
+  $("#fileInput").on("change", function (event) {
+    let file = event.target.files[0];
+    if (file) {
+      let reader = new FileReader();
+      reader.onload = async (e) => {
+        let fileContent = e.target.result;
+        let dataImport;
+        try {
+          dataImport = JSON.parse(fileContent);
+        } catch (error) {
+          let customClass = $("<div></div>")
+            .html(
+              `The file format for reading configuration information is JSON format<br>  Please check the file format extension.`
+            )
+            .css("font-size", "14px");
+          await Swal10.fire({
+            icon: "error",
+            html: customClass.prop("outerHTML"),
+            confirmButtonColor: "#3498db",
+          });
+
+          $("#fileInput").val("");
+          return;
+        }
+
+        let checkCompareConfig = await compareConfigStructures(dataImport);
+        if (!checkCompareConfig) {
+          $("#fileInput").val("");
+          return;
+        } else {
+          await setConfig(dataImport);
+          Swal10.fire({
+            position: "center",
+            icon: "success",
+            text: "Configuration information was successfully imported",
+            showConfirmButton: true,
+          });
+          $("#fileInput").val("");
+        }
+      };
+      reader.readAsText(file);
+    } else {
+      Swal10.fire({
+        position: "center",
+        text: "Select the file you want to import",
+        confirmButtonColor: "#3498db",
+        confirmButtonText: "OK",
+      });
+      $("#fileInput").val("");
+    }
   });
 
   //   window.RsComAPI.hideSpinner();

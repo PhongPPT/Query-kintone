@@ -1,0 +1,58 @@
+{
+    "table": [
+        {
+            "buttonName": "Search Data",
+            "InputName": "UserName",
+            "fieldA": "Text",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "LastnNme",
+            "fieldA": "lname",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Age",
+            "fieldA": "Number",
+            "condition": "initial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Time",
+            "fieldA": "Time",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Date",
+            "fieldA": "Date",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Chek Box",
+            "fieldA": "Check_box",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Radio Button",
+            "fieldA": "Radio_button",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "Mului Choice",
+            "fieldA": "Multi_choice",
+            "condition": "partial"
+        },
+        {
+            "buttonName": "",
+            "InputName": "DropDown",
+            "fieldA": "Drop_down",
+            "condition": "partial"
+        }
+    ]
+}
