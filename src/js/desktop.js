@@ -40,6 +40,7 @@
         .text(labelName + ":")
         .css({ marginRight: "10px" });
       wrapper.append(label);
+      wrapper.append("<br>");
       let input;
 
       switch (item.fieldA) {
@@ -146,6 +147,7 @@
       // Loop inputs to build query parts
       $.each(CONFIG_JSON.table || [], function (index, item) {
         const value = $(`#dynamic-input-${index}`).val();
+        console.log("Need to test data", value);
 
         if (value && value !== "" && value !== "-----") {
           const fieldCode = item.fieldA;
@@ -169,43 +171,38 @@
               const escapedValues = value
                 .replace(/"/g, '\\"')
                 .replace(/\s+/g, "");
-              // const joinedValues = escapedValues.split("").join(",");
-              // console.log("joinedValue", joinedValues);
-              // queryPart = `${fieldCode} like "_,${joinedValues}"`;
               queryPart = `(${fieldCode} like "${escapedValues}")`;
               break;
             // case "Text":
-            // case "Rich_text":
-            //   const escapedValue = value.replace(/"/g, '\\"');
-            //   console.log("escapedValue", escapedValue);
-            //   queryPart = `(${fieldCode} like "${escapedValue}")`;
-            //   break;
+            case "Rich_text":
+              queryPart = `(${fieldCode} like "${value}")`;
+              break;
 
-            // case "Number":
-            //   queryPart = `(${fieldCode} = ${value})`;
-            //   break;
+            case "Number":
+              queryPart = `(${fieldCode} = ${value})`;
+              break;
 
-            // case "Radio_button":
-            // case "Drop_down":
-            //   queryPart = `(${fieldCode} in ("${value}"))`;
-            //   break;
+            case "Radio_button":
+            case "Drop_down":
+              queryPart = `(${fieldCode} in ("${value}"))`;
+              break;
 
-            // case "Check_box":
-            // case "Multi_choice":
-            //   const values = value
-            //     .split(",")
-            //     .map((v) => `"${v.trim()}"`)
-            //     .join(", ");
-            //   console.log("values", values);
-            //   queryPart = `(${fieldCode} in (${values}))`;
-            //   break;
+            case "Check_box":
+            case "Multi_choice":
+              const values = value
+                .split(",")
+                .map((v) => `"${v.trim()}"`)
+                .join(", ");
+              console.log("values", values);
+              queryPart = `(${fieldCode} in (${values}))`;
+              break;
 
-            // case "Date":
-            // case "Time":
-            // case "Date_and_time":
-            //   console.log("value", value);
-            //   queryPart = `(${fieldCode} >= "${value}") and (${fieldCode} <= "${value}")`;
-            //   break;
+            case "Date":
+            case "Time":
+            case "Date_and_time":
+              console.log("value", value);
+              queryPart = `(${fieldCode} >= "${value}") and (${fieldCode} <= "${value}")`;
+              break;
 
             default:
               console.warn(`Unhandled field type: ${fieldCode}`);
@@ -232,7 +229,6 @@
       // Combine with AND
 
       let querys = queryParts.join(" and ");
-      console.log("query", querys);
       const baseUrl = window.location.href.match(/\S+\//)[0];
       // if (!querys) {
       //   alert("Please enter at least one search condition.");
