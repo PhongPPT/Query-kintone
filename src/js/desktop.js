@@ -3,6 +3,7 @@
     let CONFIG = kintone.plugin.app.getConfig(PLUGIN_ID);
     if (!CONFIG) return;
     let CONFIG_JSON = JSON.parse(CONFIG.config || "{}");
+    console.log("CONFIG_JSON", CONFIG_JSON);
     let BUTTONNAME = CONFIG_JSON.table
       .filter((item) => item.buttonName && item.buttonName.trim() !== "")
       .map((item) => item.buttonName);
@@ -68,7 +69,12 @@
             .addClass("type-select-field-A kintoneplugin-input-text")
             .attr("id", `dynamic-input-${index}`)
             .attr("name", `dynamic-input-${index}`)
-            .css({ padding: "5px", marginLeft: "5px", width: "150px", borderRadius: "10px" })
+            .css({
+              padding: "5px",
+              marginLeft: "5px",
+              width: "150px",
+              borderRadius: "10px",
+            })
             .append('<option value="-----">-----</option>')
             .append('<option value="sample1">sample1</option>')
             .append('<option value="sample2">sample2</option>')
@@ -83,7 +89,12 @@
         input
           .attr("id", `dynamic-input-${index}`)
           .attr("name", `dynamic-input-${index}`)
-          .css({ padding: "5px", marginLeft: "5px", width: "150px", borderRadius: "10px" })
+          .css({
+            padding: "5px",
+            marginLeft: "5px",
+            width: "150px",
+            borderRadius: "10px",
+          })
           .addClass("kintoneplugin-input-text");
       } else {
         input
@@ -111,7 +122,12 @@
     let button = $("<button>")
       .addClass("kintoneplugin-button-dialog-ok")
       .text(`${BUTTONNAME}`)
-      .css({ border: "none", marginTop: "23px", width: "150px", borderRadius: "10px" });
+      .css({
+        border: "none",
+        marginTop: "23px",
+        width: "150px",
+        borderRadius: "10px",
+      });
     console.log("item?.buttonName", BUTTONNAME);
     div.append(button);
     $(spaceEl).append(div);
@@ -139,39 +155,57 @@
           }
           console.log(fieldCode);
           let queryPart = "";
-          switch (item.fieldA) {
-            case "Text":
-            case "Rich_text":
-              const escapedValue = value.replace(/"/g, '\\"');
-              console.log("escapedValue", escapedValue);
-              queryPart = `(${fieldCode} like "${escapedValue}")`;
+          switch (item.condition) {
+            case "partial":
+              const escapedValue = value
+                .replace(/"/g, '\\"')
+                .replace(/\s+/g, "");
+              const joinedValue = escapedValue.split("").join(",");
+              console.log("joinedValue", joinedValue);
+              queryPart = `${fieldCode} like "_,${joinedValue}"`;
+              // queryPart = `_,(${fieldCode} like "${escapedValue}.join(",")")`;
               break;
+            case "initial":
+              const escapedValues = value
+                .replace(/"/g, '\\"')
+                .replace(/\s+/g, "");
+              // const joinedValues = escapedValues.split("").join(",");
+              // console.log("joinedValue", joinedValues);
+              // queryPart = `${fieldCode} like "_,${joinedValues}"`;
+              queryPart = `(${fieldCode} like "${escapedValues}")`;
+              break;
+            // case "Text":
+            // case "Rich_text":
+            //   const escapedValue = value.replace(/"/g, '\\"');
+            //   console.log("escapedValue", escapedValue);
+            //   queryPart = `(${fieldCode} like "${escapedValue}")`;
+            //   break;
 
-            case "Number":
-              queryPart = `(${fieldCode} = ${value})`;
-              break;
+            // case "Number":
+            //   queryPart = `(${fieldCode} = ${value})`;
+            //   break;
 
-            case "Radio_button":
-            case "Drop_down":
-              queryPart = `(${fieldCode} in ("${value}"))`;
-              break;
+            // case "Radio_button":
+            // case "Drop_down":
+            //   queryPart = `(${fieldCode} in ("${value}"))`;
+            //   break;
 
-            case "Check_box":
-            case "Multi_choice":
-              const values = value
-                .split(",")
-                .map((v) => `"${v.trim()}"`)
-                .join(", ");
-              console.log("values", values);
-              queryPart = `(${fieldCode} in (${values}))`;
-              break;
+            // case "Check_box":
+            // case "Multi_choice":
+            //   const values = value
+            //     .split(",")
+            //     .map((v) => `"${v.trim()}"`)
+            //     .join(", ");
+            //   console.log("values", values);
+            //   queryPart = `(${fieldCode} in (${values}))`;
+            //   break;
 
-            case "Date":
-            case "Time":
-            case "Date_and_time":
-              console.log("value", value);
-              queryPart = `(${fieldCode} >= "${value}") and (${fieldCode} <= "${value}")`;
-              break;
+            // case "Date":
+            // case "Time":
+            // case "Date_and_time":
+            //   console.log("value", value);
+            //   queryPart = `(${fieldCode} >= "${value}") and (${fieldCode} <= "${value}")`;
+            //   break;
 
             default:
               console.warn(`Unhandled field type: ${fieldCode}`);

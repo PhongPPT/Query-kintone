@@ -6,6 +6,58 @@ jQuery.noConflict();
   let CONFIG_JSON = JSON.parse(CONFIG.config || "{}");
   console.log("CONFIG", CONFIG_JSON);
 
+  // async function getAllRecords(appId) {
+  //   let allRecords = [];
+  //   let offset = 0;
+  //   const limit = 500;
+
+  //   while (true) {
+  //     const response = await kintone.api(
+  //       kintone.api.url("/k/v1/records", true),
+  //       "GET",
+  //       {
+  //         app: appId,
+  //         query: `limit ${limit} offset ${offset}`,
+  //       }
+  //     );
+
+  //     allRecords = allRecords.concat(response.records);
+
+  //     if (response.records.length < limit) {
+  //       break; // No more records
+  //     }
+
+  //     offset += limit;
+  //   }
+
+  //   console.log("Total records:", allRecords.length);
+  //   return allRecords;
+  // }
+
+  async function getAllRecords(appId) {
+    const allRecords = [];
+    let offset = 0;
+    const limit = 100;
+
+    while (true) {
+      const response = await kintone.api(
+        kintone.api.url("/k/v1/records", true),
+        "GET",
+        {
+          app: appId,
+          query: `limit ${limit} offset ${offset}`,
+        }
+      );
+
+      allRecords.push(...response.records);
+
+      if (response.records.length < limit) break;
+      offset += limit;
+    }
+
+    return allRecords;
+  }
+
   // Check row function - fixed class names
   function checkRow() {
     let $rows = $("#kintoneplugin-setting-tspace > tr:not([hidden])");
@@ -202,12 +254,22 @@ jQuery.noConflict();
           subRow.querySelector(".type-select-field-A")?.value || "";
         const condition =
           subRow.querySelector(".store-field-select-condition")?.value || "";
+        let recreate = false;
+        if (condition === "partial") {
+          recreate = true;
+        } else {
+          const recreateBtn = subRow.querySelector(".js-reactios-button");
+          recreate = recreateBtn
+            ? window.getComputedStyle(recreateBtn).display !== "none"
+            : false;
+        }
 
         config.table.push({
           buttonName,
           InputName,
           fieldA,
           condition,
+          recreate,
         });
       });
     });
@@ -267,6 +329,13 @@ jQuery.noConflict();
       subRow.querySelector(".store-field-select-condition").value =
         subItem.condition || "-----";
 
+      const recreateButton = subRow.querySelector(".js-reactios-button");
+      if (subItem.recreate) {
+        recreateButton.style.display = "inline-block";
+      } else {
+        recreateButton.style.display = "none";
+      }
+
       // Convert to jQuery object to apply additional styling
       const subClonedRow = $(subRow);
 
@@ -295,6 +364,64 @@ jQuery.noConflict();
 
   await setConfig(CONFIG_JSON);
 
+  //Reactios function
+  $(document).on("change", ".store-field-select-condition", function () {
+    const value = $(this).val().toLowerCase();
+    console.log("value", value);
+
+    const saveButton = $(this).closest(".row").find(".js-reactios-button");
+
+    if (value === "partial") {
+      saveButton.show();
+    } else {
+      saveButton.hide();
+    }
+  });
+
+  //click Button reactios
+  $(document).on("click", ".js-reactios-button", async function () {
+    const appId = kintone.app.getId();
+
+    try {
+      const records = await getAllRecords(appId);
+      console.log("Total records:", records);
+      console.log("Total records:", records.length);
+
+      for (const [index, record] of records.entries()) {
+        const textField = record.Text;
+
+        if (textField && textField.type === "SINGLE_LINE_TEXT") {
+          const originalValue = textField.value || "";
+          const formattedValue = "_," + originalValue.split("").join(",");
+
+          const recordId = record.$id.value;
+
+          try {
+            await kintone.api(kintone.api.url("/k/v1/record", true), "PUT", {
+              app: appId,
+              id: recordId,
+              record: {
+                Text: {
+                  value: formattedValue,
+                },
+              },
+            });
+
+            console.log(
+              `Record ${index + 1} updated successfully. Value: ${formattedValue}`
+            );
+          } catch (updateError) {
+            console.error(`Error updating record`, updateError);
+          }
+        } else {
+          console.log(`Text field is missing or not SINGLE_LINE_TEXT`);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch records:", err);
+    }
+  });
+
   // check value selection in the dropdown dont repeat
   function checkDuplicateSelect() {
     const selected = [];
@@ -312,7 +439,6 @@ jQuery.noConflict();
     });
 
     console.log("selected", selected);
-
     return isDuplicate;
   }
 
@@ -387,7 +513,7 @@ jQuery.noConflict();
   });
 
   // function check structure and data import
-  async function compareConfigStructures(dataImport) { 
+  async function compareConfigStructures(dataImport) {
     let errorTexts = [];
     let configStructure = {
       table: [
